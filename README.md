@@ -1,2 +1,2 @@
 # testExamples
-实践得真知
+一些测试程序
