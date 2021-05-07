@@ -32,10 +32,10 @@ int main() {
 
     float vertices[] = {
 //     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
-            0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   3.0f, 3.0f,   // 右上
-            0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   3.0f, 0.0f,   // 右下
+            0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // 右上
+            0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 右下
             -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // 左下
-            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 3.0f    // 左上
+            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 左上
     };
 
     // 顶点着色器硬编码 vec3数据类型，in关键字，查看编译错误信息
@@ -70,7 +70,7 @@ int main() {
                                     "uniform sampler2D ourTexture;\n"
                                     "void main()\n"
                                     "{\n"
-                                    "    FragColor = texture(ourTexture, outst) * vec4(outcolor, 1.0);\n"
+                                    "    FragColor = texture(ourTexture, outst)* vec4(outcolor, 1.0);\n"
                                     "}\0";
     unsigned int fragmentShaderFd;
     fragmentShaderFd = glCreateShader(GL_FRAGMENT_SHADER);
