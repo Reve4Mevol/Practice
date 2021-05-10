@@ -97,7 +97,17 @@ int main() {
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
+
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+    // ------------------------------------------------------------------
+    glfwTerminate();
 
     return 0;
 }
