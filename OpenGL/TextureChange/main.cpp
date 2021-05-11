@@ -15,26 +15,45 @@ void processInput(GLFWwindow *window)
     }
 }
 
-const char *vertexSrc = "#version 330 core\n"
-                            "layout (location = 0) in vec3 aPos;\n"
-                            "layout (location = 1) in vec2 aTexPosReverse;\n"
-                            "out vec2 aTexPos;\n"
-                            "uniform mat4 transform;\n"
-                            "void main()\n"
-                            "{\n"
-                            "// 让输入坐标与全局矩阵运算实现坐标变化\n"
-                            "gl_Position = transform * vec4(aPos,1.0f);\n"
-                                "aTexPos = vec2(aTexPosReverse.x,1-aTexPosReverse.y);\n"
-                            "}\0";
-
-const char *fragSrc = "#version 330 core\n"
+const char *vertexSrc =
+        "#version 330 core\n"
+                        "layout (location = 0) in vec3 aPos;\n"
+                        "layout (location = 1) in vec2 aTexPosReverse;\n"
+                        "out vec2 aTexPos;\n"
+                        "void main()\n"
+                        "{\n"
+                        "    gl_Position = vec4(aPos,1.0f);\n"
+                        "    aTexPos = vec2(aTexPosReverse.x,1-aTexPosReverse.y);\n"
+                        "}\0";
+//        "#version 330 core\n"
+//                            "layout (location = 0) in vec3 aPos;\n"
+//                            "layout (location = 1) in vec2 aTexPosReverse;\n"
+//                            "out vec2 aTexPos;\n"
+//                            "uniform mat4 transform;\n"
+//                            "void main()\n"
+//                            "{\n"
+//                            "// 让输入坐标与全局矩阵运算实现坐标变化\n"
+//                                "gl_Position = vec4(aPos,1.0f);\n"
+//                                "aTexPos = vec2(aTexPosReverse.x,1-aTexPosReverse.y);\n"
+//                            "}\0";
+const char *fragSrc =
+//        "#version 330 core\n"
+//                      "in vec2 aTexPos;\n"
+//                      "out vec4 FragColor;\n"
+//                      "uniform sampler2D aTexture1;\n"
+//                      "uniform sampler2D aTexture2;\n"
+//                      "void main()\n"
+//                      "{\n"
+//                      "    FragColor = mix(texture(aTexture1, aTexPos),texture(aTexture2, aTexPos),0.7);\n"
+//                      "}\0";
+        "#version 330 core\n"
                         "in vec2 aTexPos;\n"
                         "out vec4 FragColor;\n"
                         "uniform sampler2D aTexture1;\n"
                         "uniform sampler2D aTexture2;\n"
                         "void main()\n"
                         "{\n"
-                        "// 真正使用的texture是纹理与坐标的组合\n"
+                        "// 真正使用的texture是纹理与坐标的组合 \n"
                         "FragColor = mix(texture(aTexture1,aTexPos),texture(aTexture2,aTexPos),0.2);\n"
                         "}\0";
 
@@ -83,20 +102,35 @@ int main() {
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     unsigned int vertexShader,fragmentShader,texture1,texture2,shaderProgram;
 
 
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader,1,&vertexSrc,NULL);
+    glCompileShader(vertexShader);
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader,GL_COMPILE_STATUS,&success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader,512,NULL,infoLog);
+        std::cout<<"ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"<<infoLog<<std::endl;
+    }
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader,1,&fragSrc,NULL);
+    glCompileShader(fragmentShader);
+    glGetShaderiv(fragmentShader,GL_COMPILE_STATUS,&success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader,512,NULL,infoLog);
+        std::cout<<"ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"<<infoLog<<std::endl;
+    }
     shaderProgram = glCreateProgram();
-    glAttachShader(GL_VERTEX_SHADER,vertexShader);
-    glAttachShader(GL_FRAGMENT_SHADER,fragmentShader);
+    glAttachShader(shaderProgram,vertexShader);
+    glAttachShader(shaderProgram,fragmentShader);
     glLinkProgram(shaderProgram);
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
@@ -110,7 +144,7 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+
     unsigned char *data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
     if (data)
     {
@@ -132,9 +166,8 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load image, create texture and generate mipmaps
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
     unsigned char *data2 = stbi_load("./shidizai.jpg", &width, &height, &nrChannels, 0);
-    if (data)
+    if (data2)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data2);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -145,13 +178,14 @@ int main() {
     }
     stbi_image_free(data2);
 
+    glUseProgram(shaderProgram);
     glUniform1i(glGetUniformLocation(shaderProgram,"aTexture1"),0);
     glUniform1i(glGetUniformLocation(shaderProgram,"aTexture2"),1);
 
-    glm::vec4 vec(1.0f,0.0f,0.0f,1.0f);
-    glm::mat4 trans;
-    trans = glm::rotate(trans,glm::radians(90.0f),glm::vec3(0.0,0.0,1.0));
-    trans = glm::scale(trans,glm::vec3(0.5f,0.5f,0.5f));
+//    glm::vec4 vec(1.0f,0.0f,0.0f,1.0f);
+//    glm::mat4 trans;
+//    trans = glm::rotate(trans,glm::radians(90.0f),glm::vec3(0.0,0.0,1.0));
+//    trans = glm::scale(trans,glm::vec3(0.5f,0.5f,0.5f));
 
 
     while(!glfwWindowShouldClose(window))
@@ -167,14 +201,20 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         // create transformations
-        glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+//        glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+//        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+//        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
         // get matrix's uniform location and set matrix
         glUseProgram(shaderProgram);
-        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+//        int pos = glGetUniformLocation(shaderProgram,"aTexture1");
+//        glUniform1i(pos,0);
+//        int pos2 = glGetUniformLocation(shaderProgram,"aTexture2");
+//        glUniform1i(pos,1);
+        glUniform1i(glGetUniformLocation(shaderProgram,"aTexture1"),0);
+        glUniform1i(glGetUniformLocation(shaderProgram,"aTexture2"),1);
+//        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+//        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
         // render container
         glBindVertexArray(VAO);
@@ -185,6 +225,7 @@ int main() {
     }
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
