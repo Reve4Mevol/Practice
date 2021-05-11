@@ -1,3 +1,0 @@
-E:/Practice/TextureChange/cmake-build-debug/CMakeFiles/edit_cache.dir
-E:/Practice/TextureChange/cmake-build-debug/CMakeFiles/TextureTest.dir
-E:/Practice/TextureChange/cmake-build-debug/CMakeFiles/rebuild_cache.dir
