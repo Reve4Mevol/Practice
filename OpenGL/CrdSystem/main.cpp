@@ -7,6 +7,8 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
+const float viewWidth = 800.0;
+const float viewHeight = 600.0;
 
 void processInput(GLFWwindow *window)
 {
@@ -19,7 +21,7 @@ int main() {
     glfwInitHint(GLFW_CONTEXT_VERSION_MAJOR,3);
     glfwInitHint(GLFW_CONTEXT_VERSION_MINOR,3);
     glfwInitHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow *window = glfwCreateWindow(800,600,"UseTexture",NULL,NULL);
+    GLFWwindow *window = glfwCreateWindow(viewWidth,viewHeight,"CrdSystem",NULL,NULL);
     if(!window)
     {
         printf("init failed!");
@@ -35,21 +37,23 @@ int main() {
     }
 
     float vertices[] = {
-//     ---- 位置 ----
             0.5f,  0.5f, 0.0f,  1.0f, 1.0f,   // 右上
             0.5f, -0.5f, 0.0f,  1.0f, 0.0f,   // 右下
             -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,   // 左下
             -0.5f,  0.5f, 0.0f,   0.0f, 1.0f    // 左上
     };
 
-    // 顶点着色器硬编码 vec3数据类型，in关键字，查看编译错误信息
     const char *vertexShaderSrc = "#version 330 core\n"
                                   "layout (location = 0) in vec3 aPos;\n"
                                   "layout (location = 1) in vec2 st;\n"
                                   "out vec2 outst;\n"
+                                  "uniform mat4 model;\n"
+                                  "uniform mat4 view;\n"
+                                  "uniform mat4 toushi;\n"
                                   "void main()\n"
                                   "{\n"
-                                  "    gl_Position = vec4(aPos,1.0);\n"
+//                                  "    gl_Position = vec4(aPos,1.0);\n"
+                                  "    gl_Position = toushi * view * model * vec4(aPos,1.0);\n"
                                   "    outst = vec2(st.x,1-st.y);\n"
                                   "}\0";
     unsigned int vertexShaderFd;
@@ -89,7 +93,6 @@ int main() {
     glAttachShader(shaderProgram,fragmentShaderFd);
     glLinkProgram(shaderProgram);
 
-    // 链接着色器成为着色器程序之后就可以删除着色器了
     glDeleteShader(vertexShaderFd);
     glDeleteShader(fragmentShaderFd);
 
@@ -163,11 +166,17 @@ int main() {
     int pos2 = glGetUniformLocation(shaderProgram,"secondTexture");
     glUniform1i(pos,1);
 
-    // uncomment this call to draw in wireframe polygons.
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(45.0f), viewWidth/viewHeight, 0.1f, 100.0f);
 
-    // render loop
-    // -----------
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "toushi"), 1, GL_FALSE, glm::value_ptr(projection));
+
     while (!glfwWindowShouldClose(window))
     {
         // input
@@ -187,6 +196,9 @@ int main() {
         int pos = glGetUniformLocation(shaderProgram,"firstTexture");
         glUniform1i(pos,0);
         int pos2 = glGetUniformLocation(shaderProgram,"secondTexture");
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "toushi"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniform1i(pos,1);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
